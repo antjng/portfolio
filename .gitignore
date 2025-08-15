@@ -1,0 +1,45 @@
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.#*
+
+# Log files
+*.log
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+*~
+
+# Sensitive information
+*.key
+*.pem
+*.p12
+.env
+.env.local
+secrets.*
+
+# Cache directories
+.cache/
+node_modules/
+.npm/
+
+# Misc.
+.zsh_history
+.ssh/
