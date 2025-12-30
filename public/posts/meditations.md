@@ -1,0 +1,5 @@
+If Nicholas Picholas was alive in Sumer, 2500BC he would have been a great warrior, renowned for his size and booming voice, directing an army of slaves to build a monument to his Godhood. But instead he was alive in the 1990s so he's wearing Hawaiian shirts on television <br>
+
+Eating a kiwi with the skin is like peering through the veil of deception and seeing the world for what is truly is for the first time. Only the holiest of fruits will take you to enlightenment in a single bite. <br>
+
+"What if I were one of them," I ponder. What would it be like to be created purely for pleasure? What would it be like to enter this world as an anode and cathode of discomfort, develop into my own antithesis — a bastion of sweetness and comfort, only for my existence to be snuffed out in short order? I sigh — for I cannot know — and reach for another handful of Sour Patch Kids.

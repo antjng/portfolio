@@ -1,50 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080404" />
+    <meta name="author" content="anita jiang" />
+    <meta name="description" content="my personal website" />
+    <meta name="keywords"
+        content="anita jiang, anita, jiang, personal website, portfolio, computer science, comp sci, cs, software, student, website, mcmaster, mac, hamilton" />
+    <meta property="og:title" content="anita jiang" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://anitajiang.me/" />
+
     <title>Anita Jiang</title>
+
+    <link rel="icon" type="image/png" href="public/favicon.png" />
     <link rel="stylesheet" href="css/styles.css">
+
+    <script defer type="module" src="js/app.js"></script>
 </head>
+
 <body>
-    <div class="header">
-        <div class="status">
-            <pre>
-        __________________
-      /                    \
-     |  under construction  |
-      \   ________________ /
-       | /'           
-       \(             
-        '.     _ 
-          ~0  (_|
-         |(_~|^~~|
-         TT/_ T"T 
-            </pre>
+    <section id="header" class="hidden">
+        <div id="coolthingy">
+            <canvas id="canvas3d"></canvas>
         </div>
-    </div>
+        <div id="aboutme">
+            <h1>anita jiang</h1>
+            <p style="margin-bottom: 16px">
+                2nd year computer science student @
+                <a href="https://mcmaster.ca/" target="_blank">mcmaster university</a>
+            </p>
+            <u>links</u>
+            <p>
+                <a href="https://github.com/antjng" target="_blank">github</a> /
+                <a href="https://www.linkedin.com/in/antjng/" target="_blank">connect</a> /
+                <a href="/public/assets/resume.pdf" target="_blank">resume</a> /
+                <a href="mailto:theanitajiang@gmail.com">reach out</a>
+            </p>
+        </div>
+    </section>
 
-    <div class="section">
-        <h2 class="section-title">currently</h2>
-        <p>Building this site. Check back soon for projects, writing, and other things.</p>
-    </div>
+    <nav class="navbar hidden">
+        <span class="underline"></span>
+        <a onclick="ul(0)">projects</a>
+        <a onclick="ul(1)">blog</a>
+        <a onclick="ul(2)">photos</a>
+        <a onclick="ul(3)">interests</a>
+    </nav>
 
-    <div class="section">
-        <h2 class="section-title">links</h2>
-        <div class="links">
-            <div class="link-item">
-                <span class="link-label">email</span>
-                <a href="mailto:theanitajiang@gmail.com" class="link-url">theanitajiang@gmail.com</a>
-            </div>
-            <div class="link-item">
-                <span class="link-label">github</span>
-                <a href="https://github.com/antjng" class="link-url">github.com/antjng</a>
-            </div>
-            <div class="link-item">
-                <span class="link-label">linkedin</span>
-                <a href="https://linkedin.com/in/antjng" class="link-url">linkedin.com/in/antjng</a>
+    <section id="sections">
+        <!-- projects -->
+        <div id="projects-section">
+            <h3 class="hidden">my projects</h3>
+            <div style="position: relative">
+                <div id="leftarrow" onclick="scrollleft()">&#8249;</div>
+                <div id="rightarrow" onclick="scrollright()">&#8250;</div>
+                <div class="projects-wrapper hidden">
+                    <div class="projects">
+                        <div class="project hidden" style="--i: 0" onmouseover="fixdelay(0)">
+                            <a href="#" target="_blank">
+                                <img src="public/img/projects/project1.jpg" alt="project1title" />
+                                <div class="overlay"></div>
+                                <div class="arrow">&#8599;</div>
+                            </a>
+                        </div>
+                        <div class="project hidden" style="--i: 1" onmouseover="fixdelay(1)">
+                            <a href="#" target="_blank">
+                                <img src="public/img/projects/project2.jpg" alt="project2title" />
+                                <div class="overlay"></div>
+                                <div class="arrow">&#8599;</div>
+                            </a>
+                        </div>
+                        <div class="project hidden" style="--i: 2" onmouseover="fixdelay(2)">
+                            <a href="#" target="_blank">
+                                <img src="public/img/projects/project3.jpg" alt="project3title" />
+                                <div class="overlay"></div>
+                                <div class="arrow">&#8599;</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+
+        <!-- blog -->
+        <div id="blog-section">
+            <h3>blog</h3>
+            <p>writing whatever i feel like, about mostly cs and university.</p>
+
+            <div id="blog-list">
+                <!-- these are just placeholders, each maps to /posts/<slug>.md -->
+                <a href="#" class="blog-post-link" data-post="hello-world">hello, world</a>
+                <a href="#" class="blog-post-link" data-post="meditations">meditations</a>
+                <a href="#" class="blog-post-link" data-post="example-post">example post</a>
+            </div>
+
+            <div id="blog-content">
+                <p>*crickets*</p>
+            </div>
+        </div>
+
+        <!-- photos -->
+        <div id="photos-section">
+            <h3 class="hidden">photos</h3>
+
+            <div class="photos-wrapper">
+                <div id="photos-grid" class="photos-grid"></div>
+            </div>
+
+            <!-- TODO: lightbox -->
+            <div id="photo-lightbox" class="photo-lightbox" aria-hidden="true">
+                <div class="photo-lightbox-panel" role="dialog" aria-modal="true" aria-label="photo viewer">
+                    <button id="photo-close" class="photo-close" aria-label="close">×</button>
+
+                    <figure class="photo-lightbox-figure">
+                        <img id="photo-lightbox-img" class="photo-lightbox-img" alt="" />
+                        <figcaption id="photo-lightbox-caption" class="photo-lightbox-caption"></figcaption>
+                    </figure>
+                </div>
+            </div>
+        </div>
+
+        <!-- interests -->
+        <div id="interests-section">
+            <h3>piano</h3>
+            <p>
+                rcm 9 <br>
+                fav composers ( <a href="https://youtu.be/ZRltNxBvMDg">shostakovich</a> / 
+                <a href="https://youtu.be/SdTKLciPfA8" target="_blank">rachmaninov</a> / 
+                <a href="https://youtu.be/pnISpahN2dM" target="_blank">hiromi uehara</a> ) <br>
+                <a href="https://youtu.be/PPQzctf_wIk" target="_blank">lugansky chills on rach 3</a>
+            </p>
+            <h3>cycling</h3>
+            <p>
+                clears all other forms of cardio.
+                i ride a <a href="public/assets/1994.pdf#page=30">trek 520 from '94</a>.
+            </p>
+            <h3>minesweeper</h3>
+            <p>
+                living in plato's cave by playing <a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/mines.html" target="_blank">deterministically</a>, a promised land of formal, mathematical logic can be found. <br>
+                pb for 30x16, 170 mines is 2:03. <br>
+                (<a href="https://youtu.be/4JoBBCFWL4g" target="_blank">puzzle</a>)
+            </p>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/events.js"></script>
 </body>
+
 </html>
