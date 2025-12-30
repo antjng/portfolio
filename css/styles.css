@@ -458,6 +458,19 @@ p {
     margin: 8px 0 4px;
 }
 
+/* blog post: markdown stuff */
+#blog-content a {
+    color: #d8e9a8;
+    text-decoration: underline;
+    transition: color 0.2s ease-out;
+}
+
+#blog-content a:hover {
+    color: #a2af7e;
+    transition: color 0.2s ease-out;
+}
+
+
 /* webring section */
 #webring {
     text-align: center;
