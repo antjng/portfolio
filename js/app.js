@@ -31,7 +31,7 @@ function initCube() {
   texture.colorSpace = THREE.SRGBColorSpace;
 
   const materials = Array.from({ length: 6 }, () => {
-    return new THREE.MeshStandardMaterial({ 
+    return new THREE.MeshStandardMaterial({
       map: texture,
       emmisive: new THREE.Color(0xffffff),
       emissiveIntensity: 0.18,
@@ -119,6 +119,7 @@ function initCube() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initCube();
+  initProjects();
   initBlog();
   initPhotos();
 });
@@ -168,6 +169,59 @@ const observer = new IntersectionObserver((entries) => {
 const hiddenElements = document.querySelectorAll(".hidden");
 hiddenElements.forEach((el) => observer.observe(el));
 
+
+
+/* PROJECTS */
+function initProjects() {
+  const container = document.querySelector(".projects");
+  if (!container) return;
+
+  const projects = [
+    {href: "https://github.com/antjng/cinerate", img: "public/img/projects/cinerate.png", alt: "cinerate",},
+    {href: "https://github.com/antjng/csv-search", img: "public/img/projects/csv-search.png", alt: "csv-search",},
+    {href: "https://github.com/antjng/hold-up", img: "public/img/projects/hold-up.png", alt: "hold-up",},
+    {href: "https://github.com/antjng/armoire", img: "public/img/projects/armoire.png", alt: "armoire",},
+    {href: "https://github.com/antjng/2048-c", img: "public/img/projects/2048.png", alt: "2048inC",},
+  ];
+
+  container.innerHTML = "";
+
+  projects.forEach((p, i) => {
+    const proj = document.createElement("div");
+    proj.className = "project hidden";
+    proj.style.setProperty("--i", String(i));
+
+    proj.onmouseover = () => {
+      try { window.fixdelay?.(i); } catch (_) { }
+    };
+
+    const a = document.createElement("a");
+    a.href = p.href;
+    a.target = "_blank";
+
+    const img = document.createElement("img");
+    img.src = p.img;
+    img.alt = p.alt || "";
+
+    const overlay = document.createElement("div");
+    overlay.className = "overlay";
+
+    const arrow = document.createElement("div");
+    arrow.className = "arrow";
+    arrow.innerHTML = "&#8599;";
+
+    a.appendChild(img);
+    a.appendChild(overlay);
+    a.appendChild(arrow);
+    proj.appendChild(a);
+    container.appendChild(proj);
+
+    observer.observe(proj);
+  });
+}
+
+
+
 /* PHOTOS */
 function initPhotos() {
   const grid = document.getElementById("photos-grid");
@@ -186,6 +240,28 @@ function initPhotos() {
   const lbImg = document.getElementById("photo-lightbox-img");
   const lbCap = document.getElementById("photo-lightbox-caption");
   const closeBtn = document.getElementById("photo-close");
+
+  // function openLightbox(p) {
+  //   if (!lightbox || !lbImg || !lbCap) return;
+  //   lbImg.src = p.src;
+  //   lbImg.alt = p.alt || "";
+  //   const cap = p.caption || "";
+  //   lbCap.textContent = cap;
+  //   lbCap.style.display = cap ? "" : "none";
+  //   lightbox.classList.add("open");
+  //   lightbox.setAttribute("aria-hidden", "false");
+  //   document.body.style.overflow = "hidden";
+  // }
+
+  // function closeLightbox() {
+  //   if (!lightbox || !lbImg || !lbCap) return;
+  //   lightbox.classList.remove("open");
+  //   lightbox.setAttribute("aria-hidden", "true");
+  //   lbImg.src = "";
+  //   lbCap.textContent = "";
+  //   lbCap.style.display = "";
+  //   document.body.style.overflow = "";
+  // }
 
   photos.forEach((p) => {
     const card = document.createElement("div");
@@ -218,28 +294,6 @@ function initPhotos() {
 
     grid.appendChild(card);
   });
-
-  // function openLightbox(p) {
-  //   if (!lightbox || !lbImg || !lbCap) return;
-  //   lbImg.src = p.src;
-  //   lbImg.alt = p.alt || "";
-  //   const cap = p.caption || "";
-  //   lbCap.textContent = cap;
-  //   lbCap.style.display = cap ? "" : "none";
-  //   lightbox.classList.add("open");
-  //   lightbox.setAttribute("aria-hidden", "false");
-  //   document.body.style.overflow = "hidden";
-  // }
-
-  // function closeLightbox() {
-  //   if (!lightbox || !lbImg || !lbCap) return;
-  //   lightbox.classList.remove("open");
-  //   lightbox.setAttribute("aria-hidden", "true");
-  //   lbImg.src = "";
-  //   lbCap.textContent = "";
-  //   lbCap.style.display = "";
-  //   document.body.style.overflow = "";
-  // }
 
   closeBtn?.addEventListener("click", closeLightbox);
   lightbox?.addEventListener("click", (e) => {
