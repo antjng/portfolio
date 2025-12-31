@@ -125,7 +125,7 @@ p {
     flex: 1;
     text-align: center;
     position: relative;
-    /* enables absolute slashes */
+    cursor:pointer;
 }
 
 /* centered slash separator */
