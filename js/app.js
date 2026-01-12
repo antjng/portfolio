@@ -129,28 +129,49 @@ function initBlog() {
   const content = document.getElementById('blog-content');
   if (!links.length || !content) return;
 
+  let loadToken = 0;
+
+  const swapContent = async (html) => {
+    // fade old out
+    content.classList.add('is-swapping');
+    await new Promise((r) => setTimeout(r, 160));
+
+    content.innerHTML = html;
+
+    // fade new in
+    requestAnimationFrame(() => {
+      content.classList.remove('is-swapping');
+    });
+  };
+
   links.forEach(link => {
     link.addEventListener('click', async (e) => {
       e.preventDefault();
       const slug = link.dataset.post;
       if (!slug) return;
 
+      const token = ++loadToken;
+
       try {
         const res = await fetch(`public/posts/${slug}.md`);
         if (!res.ok) throw new Error('not found');
         const text = await res.text();
 
+        if (token !== loadToken) return; // user clicked something else
+
         if (window.marked) {
-          content.innerHTML = window.marked.parse(text);
+          await swapContent(window.marked.parse(text));
         } else {
-          content.innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+          await swapContent(`<pre>${escapeHtml(text)}</pre>`);
         }
       } catch (err) {
-        content.innerHTML = `<p>couldn’t load that post yet.</p>`;
+        if (token !== loadToken) return;
+        await swapContent(`<p>couldn’t load that post yet.</p>`);
       }
     });
   });
 }
+
 
 function escapeHtml(str) {
   return str.replace(/[&<>]/g, (c) => (
@@ -168,6 +189,24 @@ const observer = new IntersectionObserver((entries) => {
 
 const hiddenElements = document.querySelectorAll(".hidden");
 hiddenElements.forEach((el) => observer.observe(el));
+
+const root = document.documentElement;
+const toggle = document.getElementById("theme-toggle");
+
+// load saved preference
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "light") {
+    root.classList.add("light");
+    toggle.textContent = "dark";
+}
+
+toggle.addEventListener("click", () => {
+    const isLight = root.classList.toggle("light");
+
+    toggle.textContent = isLight ? "dark" : "light";
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+});
+
 
 
 

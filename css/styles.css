@@ -8,10 +8,44 @@
     --body-width: calc(2.5 * var(--project-width));
     --project-width: 300px;
     --project-overlap: 100px;
+
+    /* dark */
+    --bg: #080404;
+    --bg-rgb: 8, 4, 4;
+    --fg: #f2f2f2;
+    --fg-rgb: 242, 242, 242;
+    --accent: #B7C88A;
+    --accent-rgb: 216, 233, 168;
+    --accent-hover: #8F9F67;
+    --selection: #271657;
+    --overlay: #000;
+    --scrollbar-thumb: var(--fg);
+
+    /* translucent */
+    --outline-weak: rgba(var(--fg-rgb), 0.14);
+    --outline-med: rgba(var(--fg-rgb), 0.18);
+    --surface-weak: rgba(255, 255, 255, 0.03);
+    --surface-med: rgba(255, 255, 255, 0.02);
+    --accent-outline: rgba(var(--accent-rgb), 0.35);
+    --caption-bg: rgba(var(--bg-rgb), 0.65);
+    --lightbox-bg: rgba(var(--bg-rgb), 0.88);
+    --close-bg: rgba(var(--bg-rgb), 0.55);
 }
 
+:root.light {
+    --bg: #f2f2f2;
+    --fg: #050505;
+    --fg-muted: #2A2A2A;
+    --border: #050505;
+    --accent: #7A2E4A;
+    --accent-hover: #5A2137;
+    --selection: #E2C2CF;
+    --overlay: rgba(5,5,5,0.7);
+}
+
+
 ::selection {
-    background: #271657;
+    background: var(--selection);
 }
 
 ::-webkit-scrollbar {
@@ -20,8 +54,31 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #f2f2f2;
+    background-color: var(--scrollbar-thumb);
     border-radius: 12px;
+}
+
+/* fade */
+body,
+#header a,
+#interests-section a,
+#webring a,
+#blog-content a,
+.blog-post-link,
+.underline,
+.photo-card,
+.photo-caption,
+.photo-lightbox,
+.photo-lightbox-img,
+.photo-close,
+::-webkit-scrollbar-thumb {
+    transition:
+        background-color 220ms ease,
+        color 220ms ease,
+        outline-color 220ms ease,
+        border-color 220ms ease,
+        fill 220ms ease,
+        stroke 220ms ease;
 }
 
 body {
@@ -29,8 +86,8 @@ body {
     max-width: var(--body-width);
     margin: 0 auto;
     padding: 0 16px;
-    background-color: #080404;
-    color: #f2f2f2;
+    background-color: var(--bg);
+    color: var(--fg);
     overflow-x: hidden;
 }
 
@@ -66,14 +123,14 @@ p {
 #header a,
 #interests-section a,
 #webring a {
-    color: #d8e9a8;
+    color: var(--accent);
     transition: color 0.2s ease-out;
 }
 
 #header a:hover,
 #interests-section a:hover,
 #webring a:hover {
-    color: #a2af7e;
+    color: var(--accent-hover);
 }
 
 #coolthingy {
@@ -101,6 +158,22 @@ p {
     margin-top: 12px;
 }
 
+#theme-toggle { /* greg mode */
+    background: none;
+    border: none;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: small;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+    text-decoration: underline;
+}
+
+#theme-toggle:hover {
+    color: var(--accent);
+}
+
 /* navbar */
 /* neutral flex layout */
 .navbar {
@@ -116,7 +189,7 @@ p {
     width: 25%;
     height: 1px;
     pointer-events: none;
-    background: #f2f2f2;
+    background: var(--fg);
     border-radius: 12px;
     transition: transform 0.5s ease-in-out;
 }
@@ -125,7 +198,7 @@ p {
     flex: 1;
     text-align: center;
     position: relative;
-    cursor:pointer;
+    cursor: pointer;
 }
 
 /* centered slash separator */
@@ -143,7 +216,14 @@ p {
 
 #sections {
     position: relative;
-    height: 450px;
+    min-height: 450px;
+    height: auto;
+    transition: height 1000ms ease;
+}
+
+#site-footer {
+    margin-top: 28px;
+    padding: 20px 0 40px;
 }
 
 /* projects section */
@@ -217,11 +297,11 @@ p {
     width: 100%;
     opacity: 0;
     transition: 0.5s ease;
-    background-color: #000;
+    background-color: var(--overlay);
 }
 
 .arrow {
-    color: #f2f2f2;
+    color: var(--fg);
     font-size: 32px;
     position: absolute;
     top: calc(50% - 6px);
@@ -270,7 +350,6 @@ p {
     transition: all 1s;
 }
 
-
 #photos-section h3 {
     margin-bottom: 16px;
 }
@@ -293,14 +372,14 @@ p {
     border-radius: 18px;
     overflow: hidden;
     position: relative;
-    outline: 1px solid rgba(242, 242, 242, 0.14);
-    background: rgba(255, 255, 255, 0.03);
+    outline: 1px solid var(--outline-weak);
+    background: var(--surface-weak);
     transition: transform 180ms ease, outline-color 180ms ease;
 }
 
 .photo-card:hover {
     transform: translateY(-2px);
-    outline-color: rgba(216, 233, 168, 0.35);
+    outline-color: var(--accent-outline);
     /* cursor: pointer; */
 }
 
@@ -327,7 +406,7 @@ p {
     font-size: 12px;
     line-height: 1.2;
     color: #f2f2f2;
-    background: rgba(8, 4, 4, 0.65);
+    background: var(--caption-bg);
     backdrop-filter: blur(6px);
     opacity: 0;
     transform: translateY(6px);
@@ -346,7 +425,7 @@ p {
     display: none;
     align-items: center;
     justify-content: center;
-    background: rgba(8, 4, 4, 0.88);
+    background: var(--lightbox-bg);
     backdrop-filter: blur(8px);
     z-index: 9999;
     padding: 24px;
@@ -360,8 +439,8 @@ p {
     max-width: min(900px, 92vw);
     max-height: 78vh;
     border-radius: 20px;
-    outline: 1px solid rgba(242, 242, 242, 0.18);
-    background: rgba(255, 255, 255, 0.02);
+    outline: 1px solid var(--outline-med);
+    background: var(--surface-med);
 }
 
 .photo-lightbox-caption {
@@ -382,16 +461,16 @@ p {
     width: 44px;
     height: 44px;
     border-radius: 999px;
-    border: 1px solid rgba(242, 242, 242, 0.18);
-    background: rgba(8, 4, 4, 0.55);
-    color: #f2f2f2;
+    border: 1px solid var(--outline-med);
+    background: var(--close-bg);
+    color: var(--fg);
     font-size: 28px;
     line-height: 1;
     cursor: pointer;
 }
 
 .photo-close:hover {
-    border-color: rgba(216, 233, 168, 0.35);
+    border-color: var(--accent-outline);
 }
 
 @media (max-width: 700px) {
@@ -438,18 +517,27 @@ p {
     display: block;
     margin-bottom: 4px;
     text-decoration: none;
-    color: #f2f2f2;
+    color: var(--fg);
     font-size: small;
 }
 
 .blog-post-link:hover {
-    color: #d8e9a8;
+    color: var(--accent);
 }
 
 #blog-content {
     margin-top: 12px;
     font-size: small;
     line-height: 1.5;
+
+    transition: opacity 220ms ease, filter 220ms ease, transform 220ms ease;
+    will-change: opacity, filter, transform;
+}
+
+#blog-content.is-swapping {
+    opacity: 0;
+    filter: blur(5px);
+    transform: translateY(8px);
 }
 
 #blog-content h1,
@@ -460,16 +548,15 @@ p {
 
 /* blog post: markdown stuff */
 #blog-content a {
-    color: #d8e9a8;
+    color: var(--accent);
     text-decoration: underline;
     transition: color 0.2s ease-out;
 }
 
 #blog-content a:hover {
-    color: #a2af7e;
+    color: var(--accent-hover);
     transition: color 0.2s ease-out;
 }
-
 
 /* webring section */
 #webring {

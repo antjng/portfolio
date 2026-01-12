@@ -21,6 +21,11 @@ function ul(newIndex) {
     const prevSection = sections[currentIndex];
     const nextSection = sections[newIndex];
 
+    activeSection = nextSection;
+    setSectionsHeight();
+    setTimeout(setSectionsHeight, 900);
+
+
     // animate old section out
     if (prevSection && prevSection !== nextSection) {
         if (currentIndex < newIndex) {
@@ -44,6 +49,29 @@ function ul(newIndex) {
     }
 }
 
+const sectionsContainer = document.getElementById("sections");
+let activeSection = sections[0];
+
+function setSectionsHeight() {
+    if (!sectionsContainer || !activeSection) return;
+    sectionsContainer.style.height = `${activeSection.scrollHeight}px`;
+}
+
+// keep footer from overlapping when section content changes (blog load, photos, etc.)
+const sectionResizeObserver = new ResizeObserver(() => {
+    // only measure the currently-visible section
+    setSectionsHeight();
+});
+
+Object.values(sections).forEach((sec) => {
+    if (sec) sectionResizeObserver.observe(sec);
+});
+
+// initial
+setSectionsHeight();
+
+window.addEventListener("resize", setSectionsHeight);
+
 function fixdelay(index) {
     const projects = document.querySelectorAll(".project");
     for (let i = index + 1; i < projects.length; i++) {
@@ -61,3 +89,7 @@ function scrollright() {
         .querySelector(".projects-wrapper")
         .scrollBy({ left: 200, behavior: "smooth" }); // width - overlap
 }
+
+document.getElementById("leftarrow").style.opacity = 1;
+document.getElementById("rightarrow").style.opacity = 1;
+document.getElementById("webring").style.opacity = 1;
