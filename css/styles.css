@@ -133,6 +133,24 @@ p {
     color: var(--accent-hover);
 }
 
+#webring .webring-logo {
+    height: 14px;
+    width: auto;
+    display: inline-block;
+    vertical-align: -0.12em;
+}
+#webring a.webring-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#header a:hover,
+#interests-section a:hover,
+#webring a:hover {
+    color: var(--accent-hover);
+}
+
 #coolthingy {
     width: 200px;
     height: 200px;
