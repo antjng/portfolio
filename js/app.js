@@ -182,6 +182,7 @@ function initProjects() {
     {href: "https://github.com/antjng/hold-up", img: "public/img/projects/hold-up.png", alt: "hold-up",},
     {href: "https://github.com/antjng/armoire", img: "public/img/projects/armoire.png", alt: "armoire",},
     {href: "https://github.com/antjng/2048-c", img: "public/img/projects/2048.png", alt: "2048inC",},
+    {href: "https://github.com/antjng/chromaview", img: "public/img/projects/chromaview.png", alt: "chromaview",},
   ];
 
   container.innerHTML = "";
