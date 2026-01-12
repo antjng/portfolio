@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initProjects();
   initBlog();
   initPhotos();
+  updateWebringLogo();
 });
 
 function initBlog() {
@@ -196,16 +197,28 @@ const toggle = document.getElementById("theme-toggle");
 // load saved preference
 const savedTheme = localStorage.getItem("theme");
 if (savedTheme === "light") {
-    root.classList.add("light");
-    toggle.textContent = "dark";
+  root.classList.add("light");
+  toggle.textContent = "dark";
+  updateWebringLogo();
 }
 
 toggle.addEventListener("click", () => {
-    const isLight = root.classList.toggle("light");
+  const isLight = root.classList.toggle("light");
 
-    toggle.textContent = isLight ? "dark" : "light";
-    localStorage.setItem("theme", isLight ? "light" : "dark");
+  toggle.textContent = isLight ? "dark" : "light";
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+
+  updateWebringLogo();
 });
+
+function updateWebringLogo() {
+  const logo = document.getElementById("webring-logo");
+  if (!logo) return;
+
+  const isLight = document.documentElement.classList.contains("light");
+  logo.src = isLight ? "public/img/webring.wine.svg" : "public/img/webring.green.svg";
+}
+
 
 
 
@@ -216,12 +229,12 @@ function initProjects() {
   if (!container) return;
 
   const projects = [
-    {href: "https://github.com/antjng/cinerate", img: "public/img/projects/cinerate.png", alt: "cinerate",},
-    {href: "https://github.com/antjng/csv-search", img: "public/img/projects/csv-search.png", alt: "csv-search",},
-    {href: "https://github.com/antjng/hold-up", img: "public/img/projects/hold-up.png", alt: "hold-up",},
-    {href: "https://github.com/antjng/armoire", img: "public/img/projects/armoire.png", alt: "armoire",},
-    {href: "https://github.com/antjng/2048-c", img: "public/img/projects/2048.png", alt: "2048inC",},
-    {href: "https://github.com/antjng/chromaview", img: "public/img/projects/chromaview.png", alt: "chromaview",},
+    { href: "https://github.com/antjng/cinerate", img: "public/img/projects/cinerate.png", alt: "cinerate", },
+    { href: "https://github.com/antjng/csv-search", img: "public/img/projects/csv-search.png", alt: "csv-search", },
+    { href: "https://github.com/antjng/hold-up", img: "public/img/projects/hold-up.png", alt: "hold-up", },
+    { href: "https://github.com/antjng/armoire", img: "public/img/projects/armoire.png", alt: "armoire", },
+    { href: "https://github.com/antjng/2048-c", img: "public/img/projects/2048.png", alt: "2048inC", },
+    { href: "https://github.com/antjng/chromaview", img: "public/img/projects/chromaview.png", alt: "chromaview", },
   ];
 
   container.innerHTML = "";
