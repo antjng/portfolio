@@ -229,6 +229,7 @@ function initProjects() {
   if (!container) return;
 
   const projects = [
+    { href: "https://github.com/antjng/mac-webring", img: "public/img/projects/mac-webring.png", alt: "mac-webring", },
     { href: "https://github.com/antjng/cinerate", img: "public/img/projects/cinerate.png", alt: "cinerate", },
     { href: "https://github.com/antjng/csv-search", img: "public/img/projects/csv-search.png", alt: "csv-search", },
     { href: "https://github.com/antjng/hold-up", img: "public/img/projects/hold-up.png", alt: "hold-up", },
