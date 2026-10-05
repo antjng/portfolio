@@ -227,18 +227,27 @@ function updateWebringLogo() {
 
 
 /* BACKGROUND */
-// brutalist ascii field: interference bands of characters drift behind the
-// page on a hard grid; moving the cursor fast stirs it up in the accent colour
+// ascii night sky on a hard character grid: three layers of twinkling stars
+// (nearer layers parallax more as you scroll), a faint milky way, the odd
+// shooting star. moving the cursor fast makes nearby stars flare
 function initBackground() {
   const canvas = document.getElementById("bg");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const RAMP = " .:-+=*#";
+  const GLYPHS = [".", "+", "*", "\\", "/"];
+  const G = Object.fromEntries(GLYPHS.map((g, i) => [g, i]));
   const CELL = 16;    // px per character cell
   const FPS = 24;
-  const STIR_R = 150; // px radius of the cursor's disturbance
+  const STIR_R = 150; // px radius of the cursor's flare
+
+  // far layer: lots of faint stars; near layer: a few bright ones
+  const LAYERS = [
+    { density: 0.016, parallax: 0.06, bright: 0.4 },
+    { density: 0.006, parallax: 0.16, bright: 0.65 },
+    { density: 0.002, parallax: 0.3, bright: 0.9 },
+  ];
 
   let dpr = 1;
   let cols = 0;
@@ -246,12 +255,72 @@ function initBackground() {
   let atlas = null; // pre-rendered glyphs: row 0 in --fg, row 1 in --accent
   let t = 0;
   const mouse = { x: 0, y: 0, t: 0, seen: false, energy: 0 };
+  const meteors = [];
+  let nextMeteor = 4 + Math.random() * 6;
+  let skyCache = LAYERS.map(() => new Map()); // layer -> sky row -> stars in it
 
-  // cheap per-cell noise so the bands don't look too clean
+  // deterministic per-cell randomness, so stars stay put between frames
   function hash(x, y) {
     let n = Math.imul(x, 374761393) + Math.imul(y, 668265263);
     n = Math.imul(n ^ (n >>> 13), 1274126177);
     return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+  }
+
+  // smooth value noise in 0..1 (and a few octaves of it), so nothing repeats
+  function noise(x, y, seed) {
+    const xi = Math.floor(x);
+    const yi = Math.floor(y);
+    const u = (x - xi) * (x - xi) * (3 - 2 * (x - xi));
+    const v = (y - yi) * (y - yi) * (3 - 2 * (y - yi));
+    const a = hash(xi + seed, yi);
+    const b = hash(xi + 1 + seed, yi);
+    const c = hash(xi + seed, yi + 1);
+    const d = hash(xi + 1 + seed, yi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+
+  function fbm(x, y, seed) {
+    return noise(x, y, seed) * 0.57 + noise(x * 2.03, y * 2.03, seed + 101) * 0.29 + noise(x * 4.11, y * 4.11, seed + 211) * 0.14;
+  }
+
+  // 0..1, how deep into the milky way a sky cell is: a wandering, patchy band
+  function band(col, skyRow) {
+    const drift = (fbm(skyRow * 0.025, 0.5, 7) - 0.5) * cols * 0.6;
+    const d = (col - cols * 0.6 + skyRow * 0.45 + drift) / (cols * 0.13 + 4);
+    return Math.min(1, Math.exp(-d * d) * (0.3 + 1.1 * fbm(col * 0.11, skyRow * 0.11, 13)));
+  }
+
+  // the stars (and milky-way dust) in one row of one layer's sky; cached
+  // since they never change, which leaves only the twinkle to do per frame
+  function skyRowStars(li, skyRow) {
+    const cache = skyCache[li];
+    let list = cache.get(skyRow);
+    if (list) return list;
+
+    const layer = LAYERS[li];
+    list = [];
+    for (let col = 0; col < cols; col++) {
+      const h = hash(col + li * 7919, skyRow);
+      const milky = li === 0 ? band(col, skyRow) : 0;
+      const clump = 2 * fbm(col * 0.05, skyRow * 0.05, 29 + li) ** 2; // clusters and voids
+      const density = layer.density * clump * (1 + 4 * milky);
+
+      if (h < density) {
+        const mag = hash(col * 3 + li, skyRow * 5 + 1);
+        const b = layer.bright * (0.35 + 0.65 * mag * mag);
+        list.push({
+          col,
+          b,
+          glyph: b < 0.3 ? "." : b < 0.62 ? "+" : "*",
+          seed: Math.floor(hash(col + 11, skyRow + li * 31) * 1e6),
+          rate: 0.4 + mag * 1.6 + hash(col, skyRow + 7) * 0.6,
+        });
+      } else if (milky > 0.3 && h < density + 0.08 * milky) {
+        list.push({ col, dust: 0.035 * milky });
+      }
+    }
+    cache.set(skyRow, list);
+    return list;
   }
 
   function buildAtlas() {
@@ -259,7 +328,7 @@ function initBackground() {
     const colors = [css.getPropertyValue("--fg").trim(), css.getPropertyValue("--accent").trim()];
 
     atlas = document.createElement("canvas");
-    atlas.width = RAMP.length * CELL * dpr;
+    atlas.width = GLYPHS.length * CELL * dpr;
     atlas.height = colors.length * CELL * dpr;
     const a = atlas.getContext("2d");
     a.scale(dpr, dpr);
@@ -268,46 +337,80 @@ function initBackground() {
     a.textBaseline = "middle";
     colors.forEach((color, row) => {
       a.fillStyle = color;
-      [...RAMP].forEach((ch, i) => a.fillText(ch, i * CELL + CELL / 2, row * CELL + CELL / 2));
+      GLYPHS.forEach((ch, i) => a.fillText(ch, i * CELL + CELL / 2, row * CELL + CELL / 2));
     });
   }
 
-  function draw() {
+  function put(glyph, accent, alpha, col, row) {
     const s = CELL * dpr;
-    const shift = Math.floor((window.scrollY * 0.4) / CELL); // rows tick by as you scroll
+    ctx.globalAlpha = Math.min(alpha, 0.85);
+    ctx.drawImage(atlas, G[glyph] * s, accent ? s : 0, s, s, col * s, row * s, s, s);
+  }
+
+  function drawStars() {
     const r2 = STIR_R * STIR_R;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    LAYERS.forEach((layer, li) => {
+      const shift = Math.floor((window.scrollY * layer.parallax) / CELL);
 
-    for (let row = 0; row < rows; row++) {
-      const gy = row + shift;
-      const py = row * CELL + CELL / 2;
-
-      for (let col = 0; col < cols; col++) {
-        const v = (
-          Math.sin(col * 0.21 + t * 0.23) +
-          Math.sin(gy * 0.27 - t * 0.17) +
-          Math.sin((col - gy) * 0.09 + t * 0.11)
-        ) / 3;
-        let level = v + hash(col, gy) * 0.4 - 0.3;
-
-        let stir = 0;
-        if (mouse.energy > 0.01) {
-          const dx = col * CELL + CELL / 2 - mouse.x;
-          const dy = py - mouse.y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < r2 * 4) {
-            stir = mouse.energy * Math.exp(-d2 / r2);
-            level += stir * 1.2;
+      for (let row = 0; row < rows; row++) {
+        for (const star of skyRowStars(li, row + shift)) {
+          if (star.dust) {
+            put(".", false, star.dust, star.col, row);
+            continue;
           }
-        }
-        if (level <= 0) continue;
 
-        const glyph = Math.min(RAMP.length - 1, 1 + Math.floor((level * (RAMP.length - 1)) / 0.9));
-        ctx.globalAlpha = Math.min(0.06 + level * 0.08 + stir * 0.25, 0.4);
-        ctx.drawImage(atlas, glyph * s, stir > 0.35 ? s : 0, s, s, col * s, row * s, s, s);
+          // irregular flicker: 1d noise over time, unique per star
+          const tw = reduceMotion ? 1 : 0.5 + 0.5 * noise(t * star.rate, 0.5, star.seed);
+          let glyph = star.glyph;
+          if (glyph === "+" && tw > 0.93) glyph = "*"; // scintillation
+          let alpha = star.b * tw * 0.38;
+          let accent = false;
+
+          if (mouse.energy > 0.01) {
+            const dx = star.col * CELL + CELL / 2 - mouse.x;
+            const dy = row * CELL + CELL / 2 - mouse.y;
+            const stir = mouse.energy * Math.exp(-(dx * dx + dy * dy) / r2);
+            alpha += stir * 0.35;
+            if (stir > 0.35) {
+              glyph = "*";
+              accent = true;
+            }
+          }
+
+          put(glyph, accent, alpha, star.col, row);
+        }
+      }
+    });
+  }
+
+  function drawMeteors() {
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const m = meteors[i];
+      const age = t - m.born;
+      if (age > m.life) {
+        meteors.splice(i, 1);
+        continue;
+      }
+      const fade = Math.min(age / 0.1, 1) * (1 - age / m.life);
+      const trail = m.vx > 0 ? "\\" : "/";
+      let prev = "";
+
+      for (let k = 0; k < 8; k++) {
+        const at = Math.max(age - k * 0.035, 0);
+        const col = Math.round(m.x + m.vx * at);
+        const row = Math.round(m.y + m.vy * at);
+        if (`${col},${row}` === prev) continue;
+        prev = `${col},${row}`;
+        put(k === 0 ? "*" : trail, false, fade * 0.45 * (1 - k / 8), col, row);
       }
     }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawStars();
+    drawMeteors();
     ctx.globalAlpha = 1;
   }
 
@@ -317,6 +420,7 @@ function initBackground() {
     canvas.height = Math.round(window.innerHeight * dpr);
     cols = Math.ceil(window.innerWidth / CELL);
     rows = Math.ceil(window.innerHeight / CELL);
+    skyCache = LAYERS.map(() => new Map());
     buildAtlas();
     draw();
   }
@@ -328,7 +432,11 @@ function initBackground() {
     .observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
   resize();
 
-  if (reduceMotion) return;
+  if (reduceMotion) {
+    // still sky, but keep the parallax honest
+    window.addEventListener("scroll", () => requestAnimationFrame(draw), { passive: true });
+    return;
+  }
 
   window.addEventListener("pointermove", (e) => {
     const now = performance.now();
@@ -350,6 +458,20 @@ function initBackground() {
     last = now;
     t = now / 1000;
     mouse.energy *= Math.pow(0.1, dt); // settles within about a second
+
+    if (t > nextMeteor) {
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      meteors.push({
+        x: cols * (0.15 + Math.random() * 0.7),
+        y: rows * Math.random() * 0.45,
+        vx: dir * (20 + Math.random() * 12),
+        vy: 9 + Math.random() * 6,
+        born: t,
+        life: 0.6 + Math.random() * 0.5,
+      });
+      nextMeteor = t + 6 + Math.random() * 9;
+    }
+
     draw();
   }
   requestAnimationFrame(frame);
