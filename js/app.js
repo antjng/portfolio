@@ -31,10 +31,12 @@ function initCube() {
   texture.colorSpace = THREE.SRGBColorSpace;
 
   const materials = Array.from({ length: 6 }, () => {
+    // glow with the photo's own colours (a flat white emissive washes it out)
     return new THREE.MeshStandardMaterial({
       map: texture,
       emissive: new THREE.Color(0xffffff),
-      emissiveIntensity: 0.18,
+      emissiveMap: texture,
+      emissiveIntensity: 0.4,
     });
   });
 
@@ -118,6 +120,7 @@ function initCube() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  initBackground();
   initCube();
   initProjects();
   initBlog();
@@ -220,6 +223,137 @@ function updateWebringLogo() {
 }
 
 
+
+
+
+/* BACKGROUND */
+// brutalist ascii field: interference bands of characters drift behind the
+// page on a hard grid; moving the cursor fast stirs it up in the accent colour
+function initBackground() {
+  const canvas = document.getElementById("bg");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const RAMP = " .:-+=*#";
+  const CELL = 16;    // px per character cell
+  const FPS = 24;
+  const STIR_R = 150; // px radius of the cursor's disturbance
+
+  let dpr = 1;
+  let cols = 0;
+  let rows = 0;
+  let atlas = null; // pre-rendered glyphs: row 0 in --fg, row 1 in --accent
+  let t = 0;
+  const mouse = { x: 0, y: 0, t: 0, seen: false, energy: 0 };
+
+  // cheap per-cell noise so the bands don't look too clean
+  function hash(x, y) {
+    let n = Math.imul(x, 374761393) + Math.imul(y, 668265263);
+    n = Math.imul(n ^ (n >>> 13), 1274126177);
+    return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+  }
+
+  function buildAtlas() {
+    const css = getComputedStyle(document.documentElement);
+    const colors = [css.getPropertyValue("--fg").trim(), css.getPropertyValue("--accent").trim()];
+
+    atlas = document.createElement("canvas");
+    atlas.width = RAMP.length * CELL * dpr;
+    atlas.height = colors.length * CELL * dpr;
+    const a = atlas.getContext("2d");
+    a.scale(dpr, dpr);
+    a.font = `11px "Aporetic", monospace`;
+    a.textAlign = "center";
+    a.textBaseline = "middle";
+    colors.forEach((color, row) => {
+      a.fillStyle = color;
+      [...RAMP].forEach((ch, i) => a.fillText(ch, i * CELL + CELL / 2, row * CELL + CELL / 2));
+    });
+  }
+
+  function draw() {
+    const s = CELL * dpr;
+    const shift = Math.floor((window.scrollY * 0.4) / CELL); // rows tick by as you scroll
+    const r2 = STIR_R * STIR_R;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let row = 0; row < rows; row++) {
+      const gy = row + shift;
+      const py = row * CELL + CELL / 2;
+
+      for (let col = 0; col < cols; col++) {
+        const v = (
+          Math.sin(col * 0.21 + t * 0.23) +
+          Math.sin(gy * 0.27 - t * 0.17) +
+          Math.sin((col - gy) * 0.09 + t * 0.11)
+        ) / 3;
+        let level = v + hash(col, gy) * 0.4 - 0.3;
+
+        let stir = 0;
+        if (mouse.energy > 0.01) {
+          const dx = col * CELL + CELL / 2 - mouse.x;
+          const dy = py - mouse.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < r2 * 4) {
+            stir = mouse.energy * Math.exp(-d2 / r2);
+            level += stir * 1.2;
+          }
+        }
+        if (level <= 0) continue;
+
+        const glyph = Math.min(RAMP.length - 1, 1 + Math.floor((level * (RAMP.length - 1)) / 0.9));
+        ctx.globalAlpha = Math.min(0.06 + level * 0.08 + stir * 0.25, 0.4);
+        ctx.drawImage(atlas, glyph * s, stir > 0.35 ? s : 0, s, s, col * s, row * s, s, s);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(window.innerWidth * dpr);
+    canvas.height = Math.round(window.innerHeight * dpr);
+    cols = Math.ceil(window.innerWidth / CELL);
+    rows = Math.ceil(window.innerHeight / CELL);
+    buildAtlas();
+    draw();
+  }
+
+  window.addEventListener("resize", resize);
+  // glyphs need re-rendering once the font loads and whenever the theme flips
+  document.fonts?.ready.then(() => { buildAtlas(); draw(); });
+  new MutationObserver(() => { buildAtlas(); draw(); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  resize();
+
+  if (reduceMotion) return;
+
+  window.addEventListener("pointermove", (e) => {
+    const now = performance.now();
+    if (mouse.seen && e.pointerType === "mouse") {
+      const speed = Math.hypot(e.clientX - mouse.x, e.clientY - mouse.y) / Math.max(now - mouse.t, 1);
+      mouse.energy = Math.min(1, mouse.energy + speed * 0.05);
+    }
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    mouse.t = now;
+    mouse.seen = true;
+  }, { passive: true });
+
+  let last = 0;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (now - last < 1000 / FPS) return;
+    const dt = Math.min((now - last) / 1000, 0.1);
+    last = now;
+    t = now / 1000;
+    mouse.energy *= Math.pow(0.1, dt); // settles within about a second
+    draw();
+  }
+  requestAnimationFrame(frame);
+}
 
 
 
