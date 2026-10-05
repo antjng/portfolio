@@ -5,9 +5,7 @@
 }
 
 :root {
-    --body-width: calc(2.5 * var(--project-width));
-    --project-width: 300px;
-    --project-overlap: 100px;
+    --body-width: 750px;
 
     /* dark */
     --bg: #080404;
@@ -15,7 +13,7 @@
     --fg: #f2f2f2;
     --fg-rgb: 242, 242, 242;
     --accent: #B7C88A;
-    --accent-rgb: 216, 233, 168;
+    --accent-rgb: 183, 200, 138;
     --accent-hover: #8F9F67;
     --selection: #271657;
     --overlay: #000;
@@ -30,17 +28,23 @@
     --caption-bg: rgba(var(--bg-rgb), 0.65);
     --lightbox-bg: rgba(var(--bg-rgb), 0.88);
     --close-bg: rgba(var(--bg-rgb), 0.55);
+    --project-line: color-mix(in srgb, var(--fg) 18%, transparent);
+    --project-shadow: 0 -12px 28px -14px rgba(0, 0, 0, 0.9);
 }
 
 :root.light {
     --bg: #f2f2f2;
+    --bg-rgb: 242, 242, 242;
     --fg: #050505;
+    --fg-rgb: 5, 5, 5;
     --fg-muted: #2A2A2A;
     --border: #050505;
     --accent: #7A2E4A;
+    --accent-rgb: 122, 46, 74;
     --accent-hover: #5A2137;
     --selection: #E2C2CF;
     --overlay: rgba(5,5,5,0.7);
+    --project-shadow: 0 -12px 28px -16px rgba(0, 0, 0, 0.3);
 }
 
 
@@ -71,6 +75,8 @@ body,
 .photo-lightbox,
 .photo-lightbox-img,
 .photo-close,
+.project a,
+.project-tab,
 ::-webkit-scrollbar-thumb {
     transition:
         background-color 220ms ease,
@@ -257,102 +263,86 @@ p {
     transition: all 1s;
 }
 
-.projects-wrapper {
-    overflow: auto;
-    transition: all 1s ease-out;
-}
-
+/* deck: cards are absolutely stacked, js springs their y / tilt */
 .projects {
-    display: flex;
-    width: calc((var(--project-width) - var(--project-overlap)) * 11);
+    --tab-h: 40px;
+    position: relative;
+    margin-top: 8px;
 }
 
 .project {
-    position: relative;
-    transition: all 1s;
-    left: calc(-1 * var(--project-overlap) * var(--i));
-}
-
-.project:nth-child(2) {
-    transition-delay: 400ms;
-}
-
-.project:nth-child(3) {
-    transition-delay: 700ms;
-}
-
-.project:nth-child(4) {
-    transition-delay: 750ms;
-}
-
-.project:nth-child(5) {
-    transition-delay: 900ms;
-}
-
-.project:hover .overlay {
-    opacity: 0.4;
-}
-
-.project:hover .arrow {
-    opacity: 1;
-}
-
-.project:hover~.project {
-    left: calc(var(--project-overlap) * (1 - var(--i)));
-}
-
-.project img {
-    width: var(--project-width);
-}
-
-.overlay {
     position: absolute;
     top: 0;
-    bottom: 0;
     left: 0;
-    right: 0;
-    height: 100%;
     width: 100%;
-    opacity: 0;
-    transition: 0.5s ease;
-    background-color: var(--overlay);
+    perspective: 1200px;
+    will-change: transform;
 }
 
-.arrow {
+.project a {
+    display: block;
+    box-sizing: border-box;
+    height: calc(var(--tab-h) + var(--img-h, 360px));
+    overflow: hidden;
     color: var(--fg);
-    font-size: 32px;
-    position: absolute;
-    top: calc(50% - 6px);
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    opacity: 0;
-    transition: 0.5s ease;
+    text-decoration: none;
+    background-color: var(--bg);
+    border: 1px solid var(--project-line);
+    border-radius: 12px;
+    box-shadow: var(--project-shadow);
+    will-change: transform;
 }
 
-#leftarrow {
-    position: absolute;
-    top: calc(50% - 6px);
-    left: -32px;
-    transform: translate(0, -50%);
-    opacity: 0;
-    transition: all 1s;
-    transition-delay: 1.5s;
+.project a:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
 }
 
-#rightarrow {
-    position: absolute;
-    top: calc(50% - 6px);
-    right: -32px;
-    transform: translate(0, -50%);
-    opacity: 0;
-    transition: all 1s;
-    transition-delay: 1.5s;
+.project-tab {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    height: var(--tab-h);
+    padding: 0 14px;
+    font-size: small;
 }
 
-#leftarrow:hover,
-#rightarrow:hover {
-    cursor: pointer;
+.project-num,
+.project-host {
+    opacity: 0.45;
+}
+
+.project-host {
+    margin-left: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.project-arrow {
+    transition: transform 300ms ease;
+}
+
+.project.open .project-tab {
+    color: var(--accent);
+}
+
+.project.open .project-arrow {
+    transform: translate(2px, -2px);
+}
+
+.project-media {
+    height: calc(100% - var(--tab-h));
+    overflow: hidden;
+}
+
+.project-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.08);
 }
 
 /* photos section */
@@ -398,7 +388,7 @@ p {
 .photo-card:hover {
     transform: translateY(-2px);
     outline-color: var(--accent-outline);
-    /* cursor: pointer; */
+    cursor: pointer;
 }
 
 .photo-img {
@@ -423,7 +413,7 @@ p {
     border-radius: 14px;
     font-size: 12px;
     line-height: 1.2;
-    color: #f2f2f2;
+    color: var(--fg);
     background: var(--caption-bg);
     backdrop-filter: blur(6px);
     opacity: 0;
@@ -589,8 +579,12 @@ p {
 }
 
 @media only screen and (max-width: 500px) {
-    :root {
-        --project-overlap: 180px;
+    .projects {
+        --tab-h: 36px;
+    }
+
+    .project-host {
+        display: none;
     }
 
     #header {
@@ -608,14 +602,6 @@ p {
 
     .navbar a {
         width: 25%;
-    }
-
-    #leftarrow {
-        display: none;
-    }
-
-    #rightarrow {
-        display: none;
     }
 }
 

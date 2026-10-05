@@ -72,24 +72,4 @@ setSectionsHeight();
 
 window.addEventListener("resize", setSectionsHeight);
 
-function fixdelay(index) {
-    const projects = document.querySelectorAll(".project");
-    for (let i = index + 1; i < projects.length; i++) {
-        projects[i].style["transition-delay"] = `${150 * (i - index - 1)}ms`;
-    }
-}
-
-function scrollleft() {
-    document
-        .querySelector(".projects-wrapper")
-        .scrollBy({ left: -200, behavior: "smooth" }); // width - overlap
-}
-function scrollright() {
-    document
-        .querySelector(".projects-wrapper")
-        .scrollBy({ left: 200, behavior: "smooth" }); // width - overlap
-}
-
-document.getElementById("leftarrow").style.opacity = 1;
-document.getElementById("rightarrow").style.opacity = 1;
 document.getElementById("webring").style.opacity = 1;
