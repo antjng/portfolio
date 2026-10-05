@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCube();
   initProjects();
   initBlog();
-  initPhotos();
+  initMusic();
   updateWebringLogo();
 });
 
@@ -493,87 +493,332 @@ function initProjects() {
 
 
 
-/* PHOTOS */
-function initPhotos() {
-  const grid = document.getElementById("photos-grid");
-  if (!grid) return;
+/* MUSIC */
+// a crate of top albums from last.fm. drag down to pull records toward you,
+// up to push them back. each record chases its slot on its own spring (looser
+// the further back it is), so a fast flick ripples through the crate
+const LASTFM_USER = "jjjjiang";
+const LASTFM_KEY = "494612dc91f88b72cff800f37ea904b7"; // read-only, safe to ship (never put the shared secret here)
+const LASTFM_BLANK = "2a96cbd8b46e442fc41c2b86b821562f"; // last.fm's grey-star placeholder
 
-  const photos = [
-    { src: "public/img/photos/photo1.jpg", alt: "photo 1", caption: "shanghai" },
-    { src: "public/img/photos/photo2.jpg", alt: "photo 2", caption: "distillery district" },
-    { src: "public/img/photos/photo3.jpg", alt: "photo 3", caption: "exams" },
-    { src: "public/img/photos/photo4.jpg", alt: "photo 4", caption: "residence" },
-    { src: "public/img/photos/photo5.jpg", alt: "photo 5", caption: "vancouver" },
-    { src: "public/img/photos/photo6.jpg", alt: "photo 6", caption: "sunny cali" },
-  ];
+async function fetchTopAlbums(period) {
+  const cacheKey = `lastfm:${period}`;
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(cacheKey));
+    if (cached && Date.now() - cached.at < 10 * 60 * 1000) return cached.albums;
+  } catch (_) { }
 
-  const lightbox = document.getElementById("photo-lightbox");
-  const lbImg = document.getElementById("photo-lightbox-img");
-  const lbCap = document.getElementById("photo-lightbox-caption");
-  const closeBtn = document.getElementById("photo-close");
+  const params = new URLSearchParams({
+    method: "user.gettopalbums",
+    user: LASTFM_USER,
+    period,
+    limit: "20",
+    api_key: LASTFM_KEY,
+    format: "json",
+  });
+  const res = await fetch(`https://ws.audioscrobbler.com/2.0/?${params}`);
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.message || "last.fm error");
 
-  function openLightbox(p) {
-    if (!lightbox || !lbImg || !lbCap) return;
-    lbImg.src = p.src;
-    lbImg.alt = p.alt || "";
-    const cap = p.caption || "";
-    lbCap.textContent = cap;
-    lbCap.style.display = cap ? "" : "none";
-    lightbox.classList.add("open");
-    lightbox.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+  const albums = (data.topalbums?.album || []).map((a) => {
+    const img = (a.image || []).map((im) => im["#text"]).filter(Boolean).pop() || "";
+    return {
+      name: a.name,
+      artist: a.artist?.name || "",
+      plays: Number(a.playcount) || 0,
+      url: a.url,
+      img: img.includes(LASTFM_BLANK) ? "" : img.replace("/300x300/", "/600x600/"), // sharper on retina
+    };
+  });
+
+  try {
+    sessionStorage.setItem(cacheKey, JSON.stringify({ at: Date.now(), albums }));
+  } catch (_) { }
+  return albums;
+}
+
+function initMusic() {
+  const crate = document.getElementById("crate");
+  const stage = crate?.querySelector(".crate-stage");
+  const info = document.getElementById("crate-info");
+  const periods = document.querySelectorAll(".crate-period");
+  if (!crate || !stage || !info) return;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const pad = (n) => String(n).padStart(2, "0");
+
+  const STEP = 70;    // px of drag per record
+  const GAP = 24;     // depth between standing records
+  const RISE = 9;     // standing records peek up over the ones in front
+  const LEAN = 10;    // standing records lean back this many degrees
+  const NUDGE = 0.12; // how far the front record tips toward you on hover
+
+  let records = []; // { el, shade, album, d: { x, v } }  d = offset from the front
+  let p = 0;        // fractional index of the record facing you
+  let pv = 0;
+  let target = 0;
+  let current = -1;
+  let hovering = false;
+  let dragging = null;
+  let loadToken = 0;
+
+  /* data */
+  function message(text) {
+    records = [];
+    stage.innerHTML = "";
+    info.innerHTML = "";
+    const msg = document.createElement("p");
+    msg.textContent = text;
+    info.appendChild(msg);
   }
 
-  function closeLightbox() {
-    if (!lightbox || !lbImg || !lbCap) return;
-    if (!lightbox.classList.contains("open")) return;
-    lightbox.classList.remove("open");
-    lightbox.setAttribute("aria-hidden", "true");
-    lbImg.removeAttribute("src");
-    lbCap.textContent = "";
-    lbCap.style.display = "";
-    document.body.style.overflow = "";
-  }
+  async function load(period) {
+    const token = ++loadToken;
+    periods.forEach((b) => b.classList.toggle("active", b.dataset.period === period));
 
-  photos.forEach((p) => {
-    const card = document.createElement("div");
-    card.className = "photo-card";
-    card.tabIndex = 0;
-
-    const img = document.createElement("img");
-    img.className = "photo-img";
-    img.src = p.src;
-    img.alt = p.alt || "";
-    img.loading = "lazy";
-
-    card.appendChild(img);
-
-    if (p.caption) {
-      const cap = document.createElement("div");
-      cap.className = "photo-caption";
-      cap.textContent = p.caption;
-      card.appendChild(cap);
+    if (!LASTFM_KEY) {
+      message("( no last.fm api key yet )");
+      return;
     }
 
-    const open = () => openLightbox(p);
-    card.addEventListener("click", open);
-    card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        open();
+    try {
+      const albums = await fetchTopAlbums(period);
+      if (token !== loadToken) return;
+      if (!albums.length) message("nothing scrobbled in this stretch.");
+      else build(albums);
+    } catch (_) {
+      if (token === loadToken) message("couldn't reach last.fm right now.");
+    }
+  }
+
+  function build(albums) {
+    stage.innerHTML = "";
+    p = 0;
+    pv = 0;
+    target = 0;
+    current = -1;
+
+    records = albums.map((album, i) => {
+      const el = document.createElement("div");
+      el.className = "record";
+
+      if (album.img) {
+        const img = document.createElement("img");
+        img.src = album.img;
+        img.alt = `${album.name} by ${album.artist}`;
+        img.draggable = false;
+        el.appendChild(img);
+      } else {
+        const blank = document.createElement("div");
+        blank.className = "record-blank";
+        blank.textContent = `${album.name} / ${album.artist}`;
+        el.appendChild(blank);
       }
+
+      const shade = document.createElement("div");
+      shade.className = "record-shade";
+      el.appendChild(shade);
+      stage.appendChild(el);
+
+      // start deep in the crate so the records slide forward into place
+      return { el, shade, album, d: { x: reduceMotion ? i : i + 6 + i * 0.4, v: 0 } };
     });
 
-    grid.appendChild(card);
+    kick();
+  }
+
+  function showInfo(i) {
+    const { album } = records[i];
+    info.innerHTML = "";
+
+    const link = document.createElement("a");
+    link.href = album.url;
+    link.target = "_blank";
+    link.textContent = `${album.name} ↗`;
+
+    const meta = document.createElement("div");
+    meta.className = "crate-meta";
+    meta.textContent = `${album.artist} · ${album.plays.toLocaleString()} plays · ${pad(i + 1)}/${pad(records.length)}`;
+
+    info.append(link, meta);
+  }
+
+  /* rendering */
+  function place(rec) {
+    const d = rec.d.x;
+    let angle, y = 0, z, shade, opacity;
+
+    if (d >= 0) {
+      // standing in the crate, receding into the back
+      angle = LEAN;
+      y = -d * RISE;
+      z = -d * GAP;
+      shade = Math.min(d * 0.14, 0.75);
+      opacity = clamp(6 - d, 0, 1);
+    } else {
+      // flipped forward toward you, leaning on the front of the crate
+      const t = Math.min(-d, 1);
+      const eased = t * t * (3 - 2 * t);
+      angle = LEAN - eased * (LEAN + 62);
+      z = -d * GAP * 0.6;
+      shade = eased * 0.8;
+      opacity = clamp(4 + d, 0, 1);
+    }
+
+    rec.el.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${angle}deg)`;
+    rec.el.style.zIndex = String(1000 - Math.round(d * 10));
+    rec.el.style.opacity = opacity;
+    rec.el.style.visibility = opacity <= 0 ? "hidden" : "";
+    rec.shade.style.opacity = shade;
+  }
+
+  /* physics loop: only runs while something is moving */
+  let running = false;
+  let lastT = 0;
+
+  function kick() {
+    if (running) return;
+    running = true;
+    lastT = performance.now();
+    requestAnimationFrame(frame);
+  }
+
+  function frame(now) {
+    const dt = clamp((now - lastT) / 1000, 0, 1 / 30);
+    lastT = now;
+    let moving = !!dragging;
+
+    if (!dragging) {
+      const goal = target + (hovering && !reduceMotion ? NUDGE : 0);
+      if (reduceMotion) {
+        p = goal;
+        pv = 0;
+      } else {
+        pv += (170 * (goal - p) - 22 * pv) * dt;
+        p += pv * dt;
+        if (Math.abs(goal - p) < 0.0005 && Math.abs(pv) < 0.0005) {
+          p = goal;
+          pv = 0;
+        } else {
+          moving = true;
+        }
+      }
+    }
+
+    records.forEach((rec, i) => {
+      const goal = i - p;
+      const s = rec.d;
+      if (reduceMotion) {
+        s.x = goal;
+        s.v = 0;
+      } else {
+        // records further from the front are looser, so motion ripples back
+        const k = 420 / (1 + 0.4 * Math.abs(goal));
+        s.v += (k * (goal - s.x) - 1.5 * Math.sqrt(k) * s.v) * dt;
+        s.x += s.v * dt;
+        if (Math.abs(goal - s.x) < 0.0005 && Math.abs(s.v) < 0.0005) {
+          s.x = goal;
+          s.v = 0;
+        } else {
+          moving = true;
+        }
+      }
+      place(rec);
+    });
+
+    if (records.length) {
+      const idx = clamp(Math.round(p), 0, records.length - 1);
+      if (idx !== current) {
+        current = idx;
+        showInfo(idx);
+      }
+    }
+
+    if (moving) requestAnimationFrame(frame);
+    else running = false;
+  }
+
+  function flipTo(i) {
+    if (!records.length) return;
+    target = clamp(i, 0, records.length - 1);
+    kick();
+  }
+
+  /* input */
+  crate.addEventListener("pointerdown", (e) => {
+    if (!records.length || e.button !== 0) return;
+    crate.setPointerCapture?.(e.pointerId);
+    crate.classList.add("dragging");
+    dragging = { y0: e.clientY, p0: p, t: performance.now(), moved: false };
+    pv = 0;
+    kick();
   });
 
-  closeBtn?.addEventListener("click", closeLightbox);
-  lightbox?.addEventListener("click", (e) => {
-    if (e.target === lightbox) closeLightbox();
+  crate.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const dy = e.clientY - dragging.y0;
+    if (Math.abs(dy) > 4) dragging.moved = true;
+
+    // rubber-band past either end of the crate
+    const max = records.length - 1;
+    const raw = dragging.p0 + dy / STEP;
+    const next = raw < 0 ? raw * 0.3 : raw > max ? max + (raw - max) * 0.3 : raw;
+
+    const now = performance.now();
+    const dt = Math.max((now - dragging.t) / 1000, 1 / 240);
+    pv = pv * 0.6 + ((next - p) / dt) * 0.4;
+    p = next;
+    dragging.t = now;
   });
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeLightbox();
+
+  function release() {
+    if (!dragging) return;
+    crate.classList.remove("dragging");
+    const { moved, t } = dragging;
+    dragging = null;
+
+    if (!moved) {
+      // tap: flip one forward, or ripple all the way back from the end
+      flipTo(target >= records.length - 1 ? 0 : target + 1);
+      return;
+    }
+    if (performance.now() - t > 80) pv = 0; // held still before letting go
+    flipTo(Math.round(p + pv * 0.15));
+  }
+
+  crate.addEventListener("pointerup", release);
+  crate.addEventListener("pointercancel", release);
+
+  crate.addEventListener("pointerenter", (e) => {
+    if (e.pointerType !== "mouse") return;
+    hovering = true;
+    kick();
   });
+  crate.addEventListener("pointerleave", (e) => {
+    if (e.pointerType !== "mouse") return;
+    hovering = false;
+    kick();
+  });
+
+  crate.addEventListener("keydown", (e) => {
+    if (!records.length) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") flipTo(target + 1);
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") flipTo(target - 1);
+    else if (e.key === "Enter") window.open(records[current].album.url, "_blank", "noopener");
+    else return;
+    e.preventDefault();
+  });
+
+  periods.forEach((b) => b.addEventListener("click", () => load(b.dataset.period)));
+
+  // size records to the column
+  new ResizeObserver(() => {
+    const size = clamp(Math.round(crate.clientWidth * 0.5), 150, 260);
+    crate.style.setProperty("--record-size", `${size}px`);
+  }).observe(crate);
+
+  load("1month");
 }
 
 

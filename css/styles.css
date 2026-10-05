@@ -20,14 +20,6 @@
     --scrollbar-thumb: var(--fg);
 
     /* translucent */
-    --outline-weak: rgba(var(--fg-rgb), 0.14);
-    --outline-med: rgba(var(--fg-rgb), 0.18);
-    --surface-weak: rgba(255, 255, 255, 0.03);
-    --surface-med: rgba(255, 255, 255, 0.02);
-    --accent-outline: rgba(var(--accent-rgb), 0.35);
-    --caption-bg: rgba(var(--bg-rgb), 0.65);
-    --lightbox-bg: rgba(var(--bg-rgb), 0.88);
-    --close-bg: rgba(var(--bg-rgb), 0.55);
     --project-line: color-mix(in srgb, var(--fg) 18%, transparent);
     --project-shadow: 0 -12px 28px -14px rgba(0, 0, 0, 0.9);
 }
@@ -70,11 +62,8 @@ body,
 #blog-content a,
 .blog-post-link,
 .underline,
-.photo-card,
-.photo-caption,
-.photo-lightbox,
-.photo-lightbox-img,
-.photo-close,
+.crate-period,
+#music-section a,
 .project a,
 .project-tab,
 ::-webkit-scrollbar-thumb {
@@ -128,6 +117,7 @@ p {
 
 #header a,
 #interests-section a,
+#music-section a,
 #webring a {
     color: var(--accent);
     transition: color 0.2s ease-out;
@@ -135,6 +125,7 @@ p {
 
 #header a:hover,
 #interests-section a:hover,
+#music-section a:hover,
 #webring a:hover {
     color: var(--accent-hover);
 }
@@ -345,8 +336,8 @@ p {
     transform: scale(1.08);
 }
 
-/* photos section */
-#photos-section {
+/* music section */
+#music-section {
     position: absolute;
     top: 0;
     left: 0;
@@ -358,133 +349,127 @@ p {
     transition: all 1s;
 }
 
-#photos-section h3 {
-    margin-bottom: 16px;
+#music-section h3 {
+    margin-bottom: 0;
 }
 
-.photos-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.crate-periods {
+    margin-top: 8px;
+    font-size: small;
 }
 
-.photos-grid {
-    width: min(720px, 100%);
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.photo-card {
-    border-radius: 18px;
-    overflow: hidden;
-    position: relative;
-    outline: 1px solid var(--outline-weak);
-    background: var(--surface-weak);
-    transition: transform 180ms ease, outline-color 180ms ease;
-}
-
-.photo-card:hover {
-    transform: translateY(-2px);
-    outline-color: var(--accent-outline);
+.crate-period {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--fg);
+    font: inherit;
+    opacity: 0.45;
     cursor: pointer;
 }
 
-.photo-img {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    display: block;
-    filter: saturate(0.98) contrast(1.02);
-    transition: transform 220ms ease;
+.crate-period:hover {
+    opacity: 0.8;
 }
 
-.photo-card:hover .photo-img {
-    transform: scale(1.02);
-}
-
-.photo-caption {
-    position: absolute;
-    left: 10px;
-    bottom: 10px;
-    right: 10px;
-    padding: 8px 10px;
-    border-radius: 14px;
-    font-size: 12px;
-    line-height: 1.2;
-    color: var(--fg);
-    background: var(--caption-bg);
-    backdrop-filter: blur(6px);
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.photo-card:hover .photo-caption {
+.crate-period.active {
     opacity: 1;
-    transform: translateY(0);
+    text-decoration: underline;
 }
 
-/* lightbox */
-.photo-lightbox {
-    position: fixed;
+/* records stand in the crate, seen from slightly above; js springs each one's tilt / depth */
+.crate {
+    --record-size: 260px;
+    position: relative;
+    height: calc(var(--record-size) + 120px);
+    margin-top: 8px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none;
+}
+
+.crate:focus-visible {
+    outline: 1px dashed var(--accent);
+    outline-offset: 4px;
+}
+
+.crate.dragging {
+    cursor: grabbing;
+}
+
+.crate-stage {
+    position: absolute;
     inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: var(--lightbox-bg);
-    backdrop-filter: blur(8px);
-    z-index: 9999;
-    padding: 24px;
+    perspective: 900px;
+    perspective-origin: 50% -40%;
 }
 
-.photo-lightbox.open {
-    display: flex;
-}
-
-.photo-lightbox-img {
-    max-width: min(900px, 92vw);
-    max-height: 78vh;
-    border-radius: 20px;
-    outline: 1px solid var(--outline-med);
-    background: var(--surface-med);
-}
-
-.photo-lightbox-caption {
-    position: fixed;
-    bottom: 18px;
+.record {
+    position: absolute;
     left: 50%;
-    transform: translateX(-50%);
-    width: min(900px, 92vw);
-    text-align: left;
-    font-size: 12px;
-    opacity: 0.85;
+    bottom: 44px;
+    width: var(--record-size);
+    height: var(--record-size);
+    margin-left: calc(var(--record-size) / -2);
+    overflow: hidden;
+    background-color: var(--bg);
+    border-radius: 4px;
+    outline: 1px solid var(--project-line);
+    box-shadow: var(--project-shadow);
+    transform-origin: 50% 100%;
+    will-change: transform;
 }
 
-.photo-close {
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    width: 44px;
-    height: 44px;
-    border-radius: 999px;
-    border: 1px solid var(--outline-med);
-    background: var(--close-bg);
-    color: var(--fg);
-    font-size: 28px;
-    line-height: 1;
-    cursor: pointer;
+.record img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    -webkit-user-drag: none;
 }
 
-.photo-close:hover {
-    border-color: var(--accent-outline);
+.record-blank {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    height: 100%;
+    padding: 14px;
+    font-size: small;
 }
 
-@media (max-width: 700px) {
-    .photos-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+.record-shade {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* front edge of the crate: records sink into it */
+.crate-lip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    height: 64px;
+    background: linear-gradient(rgba(var(--bg-rgb), 0), var(--bg) 75%);
+    border-bottom: 1px solid var(--project-line);
+    pointer-events: none;
+}
+
+.crate-info {
+    min-height: 3em;
+    margin-top: 10px;
+    font-size: small;
+}
+
+.crate-info .crate-meta {
+    opacity: 0.55;
 }
 
 /* interests section */

@@ -1,7 +1,7 @@
 const sections = {
     0: document.getElementById("projects-section"),
     1: document.getElementById("blog-section"),
-    2: document.getElementById("photos-section"),
+    2: document.getElementById("music-section"),
     3: document.getElementById("interests-section"),
 };
 
@@ -57,7 +57,7 @@ function setSectionsHeight() {
     sectionsContainer.style.height = `${activeSection.scrollHeight}px`;
 }
 
-// keep footer from overlapping when section content changes (blog load, photos, etc.)
+// keep footer from overlapping when section content changes (blog load, music, etc.)
 const sectionResizeObserver = new ResizeObserver(() => {
     // only measure the currently-visible section
     setSectionsHeight();

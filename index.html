@@ -52,7 +52,7 @@
         <span class="underline"></span>
         <a onclick="ul(0)">projects</a>
         <a onclick="ul(1)">blog</a>
-        <a onclick="ul(2)">photos</a>
+        <a onclick="ul(2)">music</a>
         <a onclick="ul(3)">interests</a>
     </nav>
 
@@ -80,25 +80,24 @@
             </div>
         </div>
 
-        <!-- photos -->
-        <div id="photos-section">
-            <h3 class="hidden">photos</h3>
-
-            <div class="photos-wrapper">
-                <div id="photos-grid" class="photos-grid"></div>
+        <!-- music -->
+        <div id="music-section">
+            <h3>on rotation</h3>
+            <p>
+                the entirety of my wrapped was a single album, so I've been trying to branch out recently.
+            </p>
+            <div class="crate-periods">
+                <button class="crate-period" data-period="7day">7d</button> /
+                <button class="crate-period" data-period="1month">1m</button> /
+                <button class="crate-period" data-period="12month">1y</button> /
+                <button class="crate-period" data-period="overall">all</button>
             </div>
 
-            <!-- TODO: lightbox -->
-            <div id="photo-lightbox" class="photo-lightbox" aria-hidden="true">
-                <div class="photo-lightbox-panel" role="dialog" aria-modal="true" aria-label="photo viewer">
-                    <button id="photo-close" class="photo-close" aria-label="close">×</button>
-
-                    <figure class="photo-lightbox-figure">
-                        <img id="photo-lightbox-img" class="photo-lightbox-img" alt="" />
-                        <figcaption id="photo-lightbox-caption" class="photo-lightbox-caption"></figcaption>
-                    </figure>
-                </div>
+            <div id="crate" class="crate" tabindex="0" aria-label="album crate, use the arrow keys to flip">
+                <div class="crate-stage"></div>
+                <div class="crate-lip"></div>
             </div>
+            <div id="crate-info" class="crate-info" aria-live="polite"></div>
         </div>
 
         <!-- interests -->
