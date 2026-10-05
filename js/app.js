@@ -266,7 +266,7 @@ function initProjects() {
     const tab = document.createElement("div");
     tab.className = "project-tab";
     tab.innerHTML = `
-      <span class="project-num">${String(i + 1).padStart(2, "0")}</span>
+      <span class="project-num">${String(projects.length - i).padStart(2, "0")}</span>
       <span class="project-name">${p.name}</span>
       <span class="project-host">${host}</span>
       <span class="project-arrow">&#8599;</span>`;
@@ -289,8 +289,8 @@ function initProjects() {
 
     const c = {
       el, a, img,
-      y: spring(), rx: spring(), ry: spring(), ix: spring(), iy: spring(),
-      target: { y: 0, rx: 0, ry: 0, ix: 0, iy: 0 },
+      y: spring(), h: spring(), rx: spring(), ry: spring(), ix: spring(), iy: spring(),
+      target: { y: 0, h: 0, rx: 0, ry: 0, ix: 0, iy: 0 },
     };
 
     // touch: first tap opens the card, second tap follows the link
@@ -321,8 +321,13 @@ function initProjects() {
   // resting y of card i given the current open card
   const topOf = (i) => i * tabH + (i > open ? cardH - tabH : 0);
 
+  // cards up to the open one are hidden behind it; cards after it only reach
+  // the bottom of the deck (otherwise their images hang off it over the footer)
+  const heightOf = (i) => (i <= open ? cardH : (cards.length - i) * tabH);
+
   function layout() {
     if (deck.clientWidth === width) return;
+    const first = width === 0;
     width = deck.clientWidth;
 
     tabH = parseFloat(getComputedStyle(deck).getPropertyValue("--tab-h")) || 40;
@@ -331,11 +336,13 @@ function initProjects() {
     cardH = tabH + imgH;
     deck.style.height = `${(cards.length - 1) * tabH + cardH}px`;
     retarget();
+    if (first) cards.forEach((c) => (c.h.x = c.target.h));
   }
 
   function retarget() {
     cards.forEach((c, i) => {
       c.target.y = dealt ? topOf(i) : 0;
+      c.target.h = heightOf(i);
       if (i !== open) Object.assign(c.target, { rx: 0, ry: 0, ix: 0, iy: 0 });
     });
     kick();
@@ -426,6 +433,7 @@ function initProjects() {
     cards.forEach((c, i) => {
       const t = c.target;
       moving = step(c.y, t.y, 260, 24, dt) | moving;
+      moving = step(c.h, t.h, 260, 24, dt) | moving;
       moving = step(c.rx, t.rx, 180, 18, dt) | moving;
       moving = step(c.ry, t.ry, 180, 18, dt) | moving;
       moving = step(c.ix, t.ix, 120, 16, dt) | moving;
@@ -435,6 +443,7 @@ function initProjects() {
       const fan = spread.x > 0 ? spread.x * i : spread.x * (last - i);
 
       c.el.style.transform = `translate3d(0, ${c.y.x + fan}px, 0)`;
+      c.a.style.height = `${Math.max(tabH, c.h.x)}px`;
       c.a.style.transform = `rotateX(${c.rx.x}deg) rotateY(${c.ry.x}deg)`;
       c.img.style.transform = `translate3d(${c.ix.x}px, ${c.iy.x}px, 0) scale(1.08)`;
     });

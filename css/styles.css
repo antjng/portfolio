@@ -333,7 +333,7 @@ p {
 }
 
 .project-media {
-    height: calc(100% - var(--tab-h));
+    height: var(--img-h, 360px);
     overflow: hidden;
 }
 
